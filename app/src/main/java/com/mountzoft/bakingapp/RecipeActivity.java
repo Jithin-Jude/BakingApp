@@ -11,6 +11,8 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.List;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -22,12 +24,15 @@ public class RecipeActivity extends AppCompatActivity {
     LinearLayoutManager mLinearLayoutManager;
     GridAutofitLayoutManager mGridAutofitLayoutManager;
     MyRecyclerViewAdapter adapter;
+
+    @BindView(R.id.rv_recipe)
     RecyclerView mRecipeRecyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_recipe);
+        ButterKnife.bind(this);
 
         RetroGetRecipeData service = RetrofitClientInstance.getRetrofitInstance().create(RetroGetRecipeData.class);
         Call<ArrayList<RetroRecipeData>> call = service.getRecipeData();
@@ -46,7 +51,6 @@ public class RecipeActivity extends AppCompatActivity {
     }
 
     private void generateDataList(ArrayList<RetroRecipeData> recipeDataList) {
-        mRecipeRecyclerView = findViewById(R.id.rv_recipe);
 
         boolean isPhone = getResources().getBoolean(R.bool.is_phone);
 

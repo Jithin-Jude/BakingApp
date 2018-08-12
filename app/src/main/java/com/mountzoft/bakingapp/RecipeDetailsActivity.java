@@ -9,23 +9,31 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
 public class RecipeDetailsActivity extends AppCompatActivity {
 
     String RECIPE_POSITION = "RECIPE_POSITION";
 
     LinearLayoutManager mLinearLayoutManager;
     RecipeDetailsRecyclerViewAdapter adapter;
-    RecyclerView mRecipeRecyclerView;
 
     int recipePosition;
     List<Ingredient> mIngredients;
 
+    @BindView(R.id.rv_recipe_detials)
+    RecyclerView mRecipeRecyclerView;
+
+    @BindView(R.id.tv_ingridents)
     TextView mTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_recipe_details);
+        ButterKnife.bind(this);
+
         mTextView = findViewById(R.id.tv_ingridents);
 
         recipePosition = getIntent().getExtras().getInt(RECIPE_POSITION);
@@ -39,7 +47,6 @@ public class RecipeDetailsActivity extends AppCompatActivity {
             mTextView.append(getString(R.string.measure)+mIngredients.get(i).getMeasure()+"\n\n");
         }
 
-        mRecipeRecyclerView = findViewById(R.id.rv_recipe_detials);
         mLinearLayoutManager = new LinearLayoutManager(getApplicationContext());
         mRecipeRecyclerView.setLayoutManager(mLinearLayoutManager);
         adapter = new RecipeDetailsRecyclerViewAdapter(this, recipePosition);

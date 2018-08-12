@@ -17,18 +17,23 @@ import android.widget.VideoView;
 import java.util.ArrayList;
 import java.util.List;
 
+import butterknife.BindView;
+
 public class RecipeDetailsActivityTablet extends AppCompatActivity {
 
     String RECIPE_POSITION = "RECIPE_POSITION";
 
     LinearLayoutManager mLinearLayoutManager;
     RecipeStepRecyclerViewAdapter adapter;
+
+    @BindView(R.id.rv_recipe_step_tablet)
     RecyclerView mRecipeRecyclerView;
 
     static int recipePosition;
     static int stepPosition;
     List<Ingredient> mIngredients;
 
+    @BindView(R.id.tv_ingridents)
     TextView mTextView;
     static TextView descriptionTextView;
     static ImageView mImageView;
@@ -47,7 +52,6 @@ public class RecipeDetailsActivityTablet extends AppCompatActivity {
 
         mContext = getApplicationContext();
 
-        mTextView = findViewById(R.id.tv_ingridents);
         descriptionTextView = findViewById(R.id.tv_step_detials);
         mVideoView =(VideoView)findViewById(R.id.videoView);
         mProgressbar = findViewById(R.id.progressBar);
@@ -70,7 +74,6 @@ public class RecipeDetailsActivityTablet extends AppCompatActivity {
 
         descriptionTextView.setText(RecipeActivity.recipeDataList.get(recipePosition).getSteps().get(stepPosition).getDescription());
 
-        mRecipeRecyclerView = findViewById(R.id.rv_recipe_step_tablet);
         mLinearLayoutManager = new LinearLayoutManager(getApplicationContext());
         mRecipeRecyclerView.setLayoutManager(mLinearLayoutManager);
         adapter = new RecipeStepRecyclerViewAdapter(this, recipePosition);
