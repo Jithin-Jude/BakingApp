@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Baking App</string>
+    <bool name="is_phone">false</bool>
+</resources>
