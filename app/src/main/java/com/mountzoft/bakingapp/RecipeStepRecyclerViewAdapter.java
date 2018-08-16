@@ -48,7 +48,7 @@ public class RecipeStepRecyclerViewAdapter extends RecyclerView.Adapter<RecipeSt
             @Override
             public void onItemClick(int position) {
                 RecipeDetailsActivityTablet.stepPosition = position;
-                stepUpdate();
+                stepUpdate(mContext);
                 //Toast.makeText(mContext, "You clicked on row number " + position, Toast.LENGTH_SHORT).show();
             }
         });

@@ -21,14 +21,50 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
+import com.google.android.exoplayer2.DefaultLoadControl;
+import com.google.android.exoplayer2.ExoPlaybackException;
+import com.google.android.exoplayer2.ExoPlayer;
+import com.google.android.exoplayer2.ExoPlayerFactory;
+import com.google.android.exoplayer2.LoadControl;
+import com.google.android.exoplayer2.PlaybackParameters;
+import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.Timeline;
+import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
+import com.google.android.exoplayer2.extractor.ExtractorsFactory;
+import com.google.android.exoplayer2.source.ExtractorMediaSource;
+import com.google.android.exoplayer2.source.LoopingMediaSource;
+import com.google.android.exoplayer2.source.MediaSource;
+import com.google.android.exoplayer2.source.TrackGroupArray;
+import com.google.android.exoplayer2.source.hls.HlsMediaSource;
+import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
+import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
+import com.google.android.exoplayer2.trackselection.TrackSelection;
+import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
+import com.google.android.exoplayer2.trackselection.TrackSelector;
+import com.google.android.exoplayer2.ui.SimpleExoPlayerView;
+import com.google.android.exoplayer2.upstream.BandwidthMeter;
+import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
+import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
+import com.google.android.exoplayer2.util.Util;
+
 public class RecipeStepDetailsActivity extends AppCompatActivity {
 
     String RECIPE_POSITION = "RECIPE_POSITION";
 
-    Uri videoUri;
-    MediaController mediaController;
+
+    private static SimpleExoPlayerView simpleExoPlayerView;
+    private static SimpleExoPlayer player;
+    static BandwidthMeter bandwidthMeter;
+    static TrackSelection.Factory videoTrackSelectionFactory;
+    static TrackSelector trackSelector;
+    static LoadControl loadControl;
+    static Uri mp4VideoUri;
+    static DefaultBandwidthMeter bandwidthMeterA;
+    static DefaultDataSourceFactory dataSourceFactory;
+    static ExtractorsFactory extractorsFactory;
+    static MediaSource videoSource;
+
     ProgressBar mProgressbar;
-    VideoView mVideoView;
     TextView mTextView;
     ActionBar mActionBar;
     Button prevBtn;
@@ -59,7 +95,6 @@ public class RecipeStepDetailsActivity extends AppCompatActivity {
 
         prevBtn = findViewById(R.id.previous_button);
         nextBtn = findViewById(R.id.next_button);
-        mVideoView =(VideoView)findViewById(R.id.videoView);
         mTextView = findViewById(R.id.tv_step_detials);
         mImageView =findViewById(R.id.no_video);
         mActionBar = getSupportActionBar();
@@ -87,34 +122,98 @@ public class RecipeStepDetailsActivity extends AppCompatActivity {
 
     private void playVideo(int currentPosition){
         if(RecipeActivity.recipeDataList.get(recipePosition).getSteps().get(currentPosition).getVideoURL() == ""){
+            bandwidthMeter = new DefaultBandwidthMeter();
+            videoTrackSelectionFactory = new AdaptiveTrackSelection.Factory(bandwidthMeter);
+            trackSelector = new DefaultTrackSelector(videoTrackSelectionFactory);
+            loadControl = new DefaultLoadControl();
+            player = ExoPlayerFactory.newSimpleInstance(this, trackSelector, loadControl);
+
             return;
         }else {
-            mVideoView.setVisibility(View.VISIBLE);
-            mImageView.setVisibility(View.GONE);
-            mediaController = new MediaController(this);
-            mediaController.setAnchorView(mVideoView);
-            mVideoView.setMediaController(mediaController);
-            videoUri = Uri.parse(RecipeActivity.recipeDataList.get(recipePosition).getSteps().get(currentPosition).getVideoURL());
-            mVideoView.setVideoURI(videoUri);
-            mVideoView.requestFocus();
+            bandwidthMeter = new DefaultBandwidthMeter();
+            videoTrackSelectionFactory = new AdaptiveTrackSelection.Factory(bandwidthMeter);
+            trackSelector = new DefaultTrackSelector(videoTrackSelectionFactory);
 
-            mVideoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+            loadControl = new DefaultLoadControl();
+
+            player = ExoPlayerFactory.newSimpleInstance(this, trackSelector, loadControl);
+            simpleExoPlayerView = new SimpleExoPlayerView(this);
+            simpleExoPlayerView = (SimpleExoPlayerView) findViewById(R.id.player_view);
+            simpleExoPlayerView.setVisibility(View.VISIBLE);
+            mImageView.setVisibility(View.GONE);
+
+            simpleExoPlayerView.setUseController(true);
+            simpleExoPlayerView.requestFocus();
+
+            simpleExoPlayerView.setPlayer(player);
+
+            mp4VideoUri = Uri.parse(RecipeActivity.recipeDataList.get(recipePosition).getSteps().get(currentPosition).getVideoURL());
+
+            bandwidthMeterA = new DefaultBandwidthMeter();
+            dataSourceFactory = new DefaultDataSourceFactory(this, Util.getUserAgent(this, "exoplayer2example"), bandwidthMeterA);
+            extractorsFactory = new DefaultExtractorsFactory();
+
+            videoSource = new ExtractorMediaSource(mp4VideoUri, dataSourceFactory, extractorsFactory, null, null);
+            final LoopingMediaSource loopingSource = new LoopingMediaSource(videoSource);
+
+            player.prepare(loopingSource);
+
+            player.addListener(new ExoPlayer.EventListener() {
+                @Override
+                public void onTimelineChanged(Timeline timeline, Object manifest, int x) {
+                    //Log.v(TAG, "Listener-onTimelineChanged...");
+                }
 
                 @Override
-                public void onPrepared(MediaPlayer mp) {
-                    mp.start();
-                    mp.setOnVideoSizeChangedListener(new MediaPlayer.OnVideoSizeChangedListener() {
+                public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
+                    //Log.v(TAG, "Listener-onTracksChanged...");
+                }
 
-                        @Override
-                        public void onVideoSizeChanged(MediaPlayer mp, int arg1, int arg2) {
-                            mProgressbar.setVisibility(View.GONE);
-                            mp.start();
-                        }
-                    });
+                @Override
+                public void onLoadingChanged(boolean isLoading) {
+                    //Log.v(TAG, "Listener-onLoadingChanged...isLoading:"+isLoading);
+                }
 
+                @Override
+                public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
+                    //Log.v(TAG, "Listener-onPlayerStateChanged..." + playbackState);
+                    if (playbackState == ExoPlayer.STATE_BUFFERING){
+                        mProgressbar.setVisibility(View.VISIBLE);
+                    } else {
+                        mProgressbar.setVisibility(View.INVISIBLE);
+                    }
+                }
 
+                @Override
+                public void onRepeatModeChanged(int repeatMode) {
+                    //Log.v(TAG, "Listener-onRepeatModeChanged...");
+                }
+
+                @Override
+                public void onPlayerError(ExoPlaybackException error) {
+                    //Log.v(TAG, "Listener-onPlayerError...");
+                }
+
+                @Override
+                public void onPositionDiscontinuity(int x) {
+                    //Log.v(TAG, "Listener-onPositionDiscontinuity...");
+                }
+
+                @Override
+                public void onPlaybackParametersChanged(PlaybackParameters playbackParameters) {
+                    //Log.v(TAG, "Listener-onPlaybackParametersChanged...");
+                }
+                @Override
+                public void onSeekProcessed() {
+                    //Log.v(TAG, "Listener-onPlaybackParametersChanged...");
+                }
+                @Override
+                public void onShuffleModeEnabledChanged(boolean x) {
+                    //Log.v(TAG, "Listener-onPlaybackParametersChanged...");
                 }
             });
+
+            player.setPlayWhenReady(true);
         }
     }
 
@@ -125,6 +224,7 @@ public class RecipeStepDetailsActivity extends AppCompatActivity {
             return;
         }
 
+        player.stop();
         nextPosition = nextPosition+1;
         stepPosition = nextPosition;
         playVideo(nextPosition);
@@ -132,11 +232,11 @@ public class RecipeStepDetailsActivity extends AppCompatActivity {
         setTitle(RecipeActivity.recipeDataList.get(recipePosition).getSteps().get(nextPosition).getShortDescription());
         if(RecipeActivity.recipeDataList.get(recipePosition).getSteps().get(nextPosition).getVideoURL() == ""){
             mImageView.setVisibility(View.VISIBLE);
-            mVideoView.setVisibility(View.GONE);
+            simpleExoPlayerView.setVisibility(View.GONE);
             mProgressbar.setVisibility(View.GONE);
         }else{
             mImageView.setVisibility(View.GONE);
-            mVideoView.setVisibility(View.VISIBLE);
+            simpleExoPlayerView.setVisibility(View.VISIBLE);
             mProgressbar.setVisibility(View.VISIBLE);
         }
     }
@@ -148,6 +248,7 @@ public class RecipeStepDetailsActivity extends AppCompatActivity {
             return;
         }
 
+        player.stop();
         nextPosition = nextPosition-1;
         stepPosition = nextPosition;
         playVideo(nextPosition);
@@ -155,11 +256,11 @@ public class RecipeStepDetailsActivity extends AppCompatActivity {
         setTitle(RecipeActivity.recipeDataList.get(recipePosition).getSteps().get(nextPosition).getShortDescription());
         if(RecipeActivity.recipeDataList.get(recipePosition).getSteps().get(nextPosition).getVideoURL() == ""){
             mImageView.setVisibility(View.VISIBLE);
-            mVideoView.setVisibility(View.GONE);
+            simpleExoPlayerView.setVisibility(View.GONE);
             mProgressbar.setVisibility(View.GONE);
         }else{
             mImageView.setVisibility(View.GONE);
-            mVideoView.setVisibility(View.VISIBLE);
+            simpleExoPlayerView.setVisibility(View.VISIBLE);
             mProgressbar.setVisibility(View.VISIBLE);
         }
     }
@@ -174,6 +275,18 @@ public class RecipeStepDetailsActivity extends AppCompatActivity {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        player.stop();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        player.stop();
     }
 
 }
