@@ -12,6 +12,8 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.mountzoft.bakingapp.RecipeStepDetailsActivity.continuePlayback;
+
 /**
  * Created by JithinJude on 15-03-2018.
  */
@@ -52,6 +54,7 @@ public class RecipeDetailsRecyclerViewAdapter extends RecyclerView.Adapter<Recip
                 Intent intent = new Intent(mContext, RecipeStepDetailsActivity.class);
                 intent.putExtra(RECIPE_POSITION,recipePosition);
                 RecipeStepDetailsActivity.stepPosition = position;
+                continuePlayback = false;
                 mContext.startActivity(intent);
             }
         });

@@ -1,13 +1,9 @@
 package com.mountzoft.bakingapp;
 
-import android.media.MediaPlayer;
 import android.net.Uri;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.CardView;
-import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.Display;
 import android.view.Surface;
 import android.view.View;
@@ -15,11 +11,9 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.MediaController;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.VideoView;
 
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.ExoPlaybackException;
@@ -35,7 +29,6 @@ import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.LoopingMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.TrackGroupArray;
-import com.google.android.exoplayer2.source.hls.HlsMediaSource;
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.TrackSelection;
@@ -50,6 +43,8 @@ import com.google.android.exoplayer2.util.Util;
 public class RecipeStepDetailsActivity extends AppCompatActivity {
 
     String RECIPE_POSITION = "RECIPE_POSITION";
+    static boolean continuePlayback;
+    static long mResumePosition;
 
 
     private static SimpleExoPlayerView simpleExoPlayerView;
@@ -116,11 +111,34 @@ public class RecipeStepDetailsActivity extends AppCompatActivity {
         }else{
             mProgressbar.setVisibility(View.GONE);
         }
-
-        playVideo(nextPosition);
+        if(!continuePlayback) {
+            initializeExoPlayer(nextPosition);
+        }
+    }
+//==================================================================================================
+    @Override
+    public void onResume() {
+        super.onResume();
+        if(continuePlayback) {
+            initializeExoPlayer(nextPosition);
+            //Toast.makeText(this, "onResume continuePlayback reached", Toast.LENGTH_SHORT).show();
+        }
     }
 
-    private void playVideo(int currentPosition){
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (simpleExoPlayerView != null && player != null) {
+            mResumePosition = Math.max(0, player.getCurrentPosition());
+            continuePlayback = true;
+            player.stop();
+            player.release();
+            //Toast.makeText(this, "onPause position saved : "+mResumePosition, Toast.LENGTH_SHORT).show();
+        }
+    }
+//==================================================================================================
+    private void initializeExoPlayer(int currentPosition){
+
         if(RecipeActivity.recipeDataList.get(recipePosition).getSteps().get(currentPosition).getVideoURL() == ""){
             bandwidthMeter = new DefaultBandwidthMeter();
             videoTrackSelectionFactory = new AdaptiveTrackSelection.Factory(bandwidthMeter);
@@ -212,12 +230,16 @@ public class RecipeStepDetailsActivity extends AppCompatActivity {
                     //Log.v(TAG, "Listener-onPlaybackParametersChanged...");
                 }
             });
-
+            if(continuePlayback) {
+                //Toast.makeText(this, "seek to : "+mResumePosition, Toast.LENGTH_SHORT).show();
+                player.seekTo(mResumePosition);
+            }
             player.setPlayWhenReady(true);
         }
     }
 
     public void nextBtn(View view){
+        continuePlayback = false;
         if(nextPosition+1 == RecipeActivity.recipeDataList.get(recipePosition).getSteps().size()){
             Toast.makeText(this, R.string.no_next_step,
                     Toast.LENGTH_LONG).show();
@@ -227,7 +249,7 @@ public class RecipeStepDetailsActivity extends AppCompatActivity {
         player.stop();
         nextPosition = nextPosition+1;
         stepPosition = nextPosition;
-        playVideo(nextPosition);
+        initializeExoPlayer(nextPosition);
         mTextView.setText(RecipeActivity.recipeDataList.get(recipePosition).getSteps().get(nextPosition).getDescription());
         setTitle(RecipeActivity.recipeDataList.get(recipePosition).getSteps().get(nextPosition).getShortDescription());
         if(RecipeActivity.recipeDataList.get(recipePosition).getSteps().get(nextPosition).getVideoURL() == ""){
@@ -242,6 +264,7 @@ public class RecipeStepDetailsActivity extends AppCompatActivity {
     }
 
     public void preBtn(View view){
+        continuePlayback = false;
         if(nextPosition-1 == -1){
             Toast.makeText(this, R.string.no_previous_step,
                     Toast.LENGTH_LONG).show();
@@ -251,7 +274,7 @@ public class RecipeStepDetailsActivity extends AppCompatActivity {
         player.stop();
         nextPosition = nextPosition-1;
         stepPosition = nextPosition;
-        playVideo(nextPosition);
+        initializeExoPlayer(nextPosition);
         mTextView.setText(RecipeActivity.recipeDataList.get(recipePosition).getSteps().get(nextPosition).getDescription());
         setTitle(RecipeActivity.recipeDataList.get(recipePosition).getSteps().get(nextPosition).getShortDescription());
         if(RecipeActivity.recipeDataList.get(recipePosition).getSteps().get(nextPosition).getVideoURL() == ""){
@@ -282,11 +305,4 @@ public class RecipeStepDetailsActivity extends AppCompatActivity {
         super.onBackPressed();
         player.stop();
     }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        player.stop();
-    }
-
 }
