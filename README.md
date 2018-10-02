@@ -31,6 +31,8 @@ One of the skills you will demonstrate in this project is how to handle unexpect
 ![screenshots-baking-app](https://user-images.githubusercontent.com/20029287/46328948-f1f21b00-c627-11e8-9274-068c0e66cba4.jpg)
 ![screenshots-baking-app 1](https://user-images.githubusercontent.com/20029287/46328969-2f56a880-c628-11e8-8ad6-e734b438e0da.jpg)
 
+![videotogif_2018 08 12_13 27 49](https://user-images.githubusercontent.com/20029287/43999999-5c490722-9e35-11e8-91b6-4972d1a96da1.gif)
+
 ## Udacity Review
 ![baking-app_review](https://user-images.githubusercontent.com/20029287/46329013-7e044280-c628-11e8-8f81-745719bd454f.JPG)
 
@@ -59,6 +61,4 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
-
-![videotogif_2018 08 12_13 27 49](https://user-images.githubusercontent.com/20029287/43999999-5c490722-9e35-11e8-91b6-4972d1a96da1.gif)
 
